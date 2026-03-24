@@ -98,11 +98,52 @@ function initParticles() {
 function initCursorGlow() {
   const trail = [];
 
+  const mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
+  const velocity = { x: 0, y: 0 };
+
   document.addEventListener("mousemove", e => {
-    trail.push({ x: e.clientX, y: e.clientY });
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  function updateTrail() {
+    if (trail.length === 0) {
+      trail.push({ x: mouse.x, y: mouse.y });
+    }
+
+    const last = trail[trail.length - 1];
+
+    // 缓动靠近鼠标
+    velocity.x += (mouse.x - last.x) * 0.1;
+    velocity.y += (mouse.y - last.y) * 0.1;
+    velocity.x *= 0.8;
+    velocity.y *= 0.8;
+
+    const newPos = { x: last.x + velocity.x, y: last.y + velocity.y };
+    trail.push(newPos);
 
     if (trail.length > 15) trail.shift();
-  });
+  }
+
+  function drawTrail() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < trail.length; i++) {
+      const p = trail[i];
+      ctx.fillStyle = `rgba(0,255,255,${i / trail.length})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function animate() {
+    updateTrail();
+    drawTrail();
+    requestAnimationFrame(animate);
+  }
+
+  animate();
 
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
