@@ -98,11 +98,33 @@ function initParticles() {
 function initCursorGlow() {
   const trail = [];
 
-  document.addEventListener("mousemove", e => {
-    trail.push({ x: e.clientX, y: e.clientY });
+  const particles = []; // 粒子数组
+  const mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
+
+// 鼠标移动时更新目标位置
+  document.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+// 粒子更新函数
+  function animate() {
+    requestAnimationFrame(animate);
+
+    particles.forEach(p => {
+      // 粒子向鼠标位置靠拢
+      p.x += (mouse.x - p.x) * 0.05;
+      p.y += (mouse.y - p.y) * 0.05;
+
+      // 渲染粒子
+      drawParticle(p);
+    });
+  }
+
+// 启动动画
+  animate();
 
     if (trail.length > 15) trail.shift();
-  });
 
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
