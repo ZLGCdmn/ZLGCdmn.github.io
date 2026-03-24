@@ -5,24 +5,22 @@
 // ===== 页面加载完成后执行 =====
 document.addEventListener("DOMContentLoaded", () => {
   typingEffect();
-  initParticles();
+  initBackgroundParticles();
   initCursorGlow();
   initProgressBar();
 });
 
 /* =========================
-   1️⃣ 打字机效果
+   1️⃣ 打字机文字效果
    ========================= */
 function typingEffect() {
   const el = document.querySelector(".glitch");
-
   if (!el) return;
 
   const text = el.innerText;
   el.innerText = "";
 
   let i = 0;
-
   function typing() {
     if (i < text.length) {
       el.innerText += text[i];
@@ -35,21 +33,19 @@ function typingEffect() {
 }
 
 /* =========================
-   2️⃣ 粒子背景（优化版）
+   2️⃣ 背景粒子
    ========================= */
-function initParticles() {
+function initBackgroundParticles() {
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
 
   const ctx = canvas.getContext("2d");
-
   canvas.style.position = "fixed";
   canvas.style.top = 0;
   canvas.style.left = 0;
   canvas.style.zIndex = "-1";
 
   resizeCanvas();
-
   window.addEventListener("resize", resizeCanvas);
 
   function resizeCanvas() {
@@ -57,31 +53,31 @@ function initParticles() {
     canvas.height = window.innerHeight;
   }
 
-  let particles = [];
-
-  const COUNT = 60; // 粒子数量（性能可调）
+  const particles = [];
+  const COUNT = 60;
 
   for (let i = 0; i < COUNT; i++) {
     particles.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       vx: Math.random() * 1 - 0.5,
-      vy: Math.random() * 1 - 0.5
+      vy: Math.random() * 1 - 0.5,
+      size: Math.random() * 2 + 1,
+      color: "#00f7ff"
     });
   }
 
   function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#00f7ff";
+    ctx.fillStyle = "rgba(10,10,20,0.3)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     particles.forEach(p => {
       p.x += p.vx;
       p.y += p.vy;
 
-      ctx.fillRect(p.x, p.y, 2, 2);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
 
-      // 边界反弹
       if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
       if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
     });
@@ -93,42 +89,11 @@ function initParticles() {
 }
 
 /* =========================
-   3️⃣ 鼠标霓虹拖尾
+   3️⃣ 鼠标拖尾粒子
    ========================= */
 function initCursorGlow() {
-  const trail = [];
-
-  const particles = []; // 粒子数组
-  const mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
-
-// 鼠标移动时更新目标位置
-  document.addEventListener('mousemove', e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-  });
-
-// 粒子更新函数
-  function animate() {
-    requestAnimationFrame(animate);
-
-    particles.forEach(p => {
-      // 粒子向鼠标位置靠拢
-      p.x += (mouse.x - p.x) * 0.05;
-      p.y += (mouse.y - p.y) * 0.05;
-
-      // 渲染粒子
-      drawParticle(p);
-    });
-  }
-
-// 启动动画
-  animate();
-
-    if (trail.length > 15) trail.shift();
-
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-
   const ctx = canvas.getContext("2d");
 
   canvas.style.position = "fixed";
@@ -137,31 +102,65 @@ function initCursorGlow() {
   canvas.style.pointerEvents = "none";
   canvas.style.zIndex = "999";
 
-  resize();
-
-  window.addEventListener("resize", resize);
-
   function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
+  resize();
+  window.addEventListener("resize", resize);
 
-  function draw() {
+  const trail = [];
+  const PARTICLE_COUNT = 30;
+  const particles = [];
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    particles.push({
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      size: Math.random() * 4 + 2,
+      color: "#00f7ff"
+    });
+  }
+
+  const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+
+  document.addEventListener("mousemove", e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+
+    trail.push({ x: mouse.x, y: mouse.y });
+    if (trail.length > 20) trail.shift();
+  });
+
+  function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // 粒子缓动 + 自身漂移
+    particles.forEach(p => {
+      p.x += (mouse.x - p.x) * 0.05 + p.vx;
+      p.y += (mouse.y - p.y) * 0.05 + p.vy;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    });
+
+    // 绘制拖尾
     for (let i = 0; i < trail.length; i++) {
       const p = trail[i];
-
-      ctx.fillStyle = `rgba(0,255,255,${i / trail.length})`;
       ctx.beginPath();
       ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,255,255,${i / trail.length})`;
       ctx.fill();
     }
 
-    requestAnimationFrame(draw);
+    requestAnimationFrame(animate);
   }
 
-  draw();
+  animate();
 }
 
 /* =========================
@@ -185,27 +184,7 @@ function initProgressBar() {
     const height =
         document.documentElement.scrollHeight -
         document.documentElement.clientHeight;
-
     const percent = (scrollTop / height) * 100;
     bar.style.width = percent + "%";
   });
-}
-
-const el = document.querySelector(".glitch");
-
-if (el) {
-  let text = el.innerText;
-  el.innerText = "";
-
-  let i = 0;
-
-  function typing() {
-    if (i < text.length) {
-      el.innerText += text[i];
-      i++;
-      setTimeout(typing, 80);
-    }
-  }
-
-  typing();
 }
