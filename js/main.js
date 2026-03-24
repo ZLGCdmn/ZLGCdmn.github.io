@@ -95,94 +95,85 @@ function initParticles() {
 /* =========================
    3️⃣ 鼠标霓虹拖尾
    ========================= */
-function initCursorGlow() {
-  const trail = [];
+/* ===============================
+   鼠标拖尾 + 点击特效
+   =============================== */
 
-  const mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
-  const velocity = { x: 0, y: 0 };
+const trail = [];
+const trailMaxLength = 20; // 拖尾长度
+const clickEffects = [];
 
-  document.addEventListener("mousemove", e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+document.body.appendChild(canvas);
+
+// 设置全屏
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+canvas.style.position = 'fixed';
+canvas.style.top = 0;
+canvas.style.left = 0;
+canvas.style.pointerEvents = 'none';
+canvas.style.zIndex = 9999;
+
+// 窗口缩放时调整画布
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+// 鼠标移动拖尾
+document.addEventListener('mousemove', (e) => {
+  trail.push({ x: e.clientX, y: e.clientY });
+  if (trail.length > trailMaxLength) trail.shift();
+});
+
+// 鼠标点击特效
+document.addEventListener('click', (e) => {
+  clickEffects.push({
+    x: e.clientX,
+    y: e.clientY,
+    radius: 0,
+    alpha: 1
+  });
+});
+
+// 渲染循环
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 绘制拖尾
+  trail.forEach((pos, index) => {
+    const size = (index / trailMaxLength) * 8 + 2; // 越靠后越大
+    const alpha = index / trailMaxLength;
+    ctx.fillStyle = `rgba(0, 200, 255, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+    ctx.fill();
   });
 
-  function updateTrail() {
-    if (trail.length === 0) {
-      trail.push({ x: mouse.x, y: mouse.y });
-    }
+  // 绘制点击特效
+  for (let i = clickEffects.length - 1; i >= 0; i--) {
+    const effect = clickEffects[i];
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255, 100, 50, ${effect.alpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-    const last = trail[trail.length - 1];
+    effect.radius += 2;
+    effect.alpha -= 0.02;
 
-    // 缓动靠近鼠标
-    velocity.x += (mouse.x - last.x) * 0.1;
-    velocity.y += (mouse.y - last.y) * 0.1;
-    velocity.x *= 0.8;
-    velocity.y *= 0.8;
-
-    const newPos = { x: last.x + velocity.x, y: last.y + velocity.y };
-    trail.push(newPos);
-
-    if (trail.length > 15) trail.shift();
-  }
-
-  function drawTrail() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let i = 0; i < trail.length; i++) {
-      const p = trail[i];
-      ctx.fillStyle = `rgba(0,255,255,${i / trail.length})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
-      ctx.fill();
+    if (effect.alpha <= 0) {
+      clickEffects.splice(i, 1);
     }
   }
 
-  function animate() {
-    updateTrail();
-    drawTrail();
-    requestAnimationFrame(animate);
-  }
-
-  animate();
-
-  const canvas = document.createElement("canvas");
-  document.body.appendChild(canvas);
-
-  const ctx = canvas.getContext("2d");
-
-  canvas.style.position = "fixed";
-  canvas.style.top = 0;
-  canvas.style.left = 0;
-  canvas.style.pointerEvents = "none";
-  canvas.style.zIndex = "999";
-
-  resize();
-
-  window.addEventListener("resize", resize);
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let i = 0; i < trail.length; i++) {
-      const p = trail[i];
-
-      ctx.fillStyle = `rgba(0,255,255,${i / trail.length})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  draw();
+  requestAnimationFrame(animate);
 }
 
+// 开始动画
+animate();
 /* =========================
    4️⃣ 页面滚动进度条
    ========================= */
