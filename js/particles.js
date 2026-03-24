@@ -25,7 +25,7 @@ for (let i = 0; i < 80; i++) {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = "#00f7ff";
+  ctx.fillStyle = "rgba(0,13,255,0.18)";
 
   particles.forEach(p => {
     p.x += p.vx;
