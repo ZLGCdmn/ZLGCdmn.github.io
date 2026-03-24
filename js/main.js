@@ -168,22 +168,3 @@ function initProgressBar() {
     bar.style.width = percent + "%";
   });
 }
-
-const el = document.querySelector(".glitch");
-
-if (el) {
-  let text = el.innerText;
-  el.innerText = "";
-
-  let i = 0;
-
-  function typing() {
-    if (i < text.length) {
-      el.innerText += text[i];
-      i++;
-      setTimeout(typing, 80);
-    }
-  }
-
-  typing();
-}
