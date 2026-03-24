@@ -1,8 +1,9 @@
 /* ===== 全局 ===== */
 body {
-  background: #0a0a0f;
-  color: #e0e0ff;
-  font-family: "Courier New", monospace;
+  background: url('/images/denys-nevozhai-2vmT5_FeMck-unsplash.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: #e0e0ff; /* 保留文字颜色 */
+  /*  font-family: "Courier New", monospace;*/
 }
 
 /* ===== 容器 ===== */
